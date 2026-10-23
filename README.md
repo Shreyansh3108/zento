@@ -2,7 +2,7 @@
 
 A full-stack enterprise dashboard built for UK energy utility traders to evaluate Day-Ahead wind generation forecasts against actual production, minimizing volumetric risk and imbalance penalties.
 
-**Live Application:** [Insert your Vercel Link Here]  
+**Live Application:** https://zento-phi.vercel.app/  
 **Video Walkthrough:** [Insert your Unlisted YouTube Link Here]
 
 ---
