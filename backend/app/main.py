@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-import pandas as pd
+import json
 from backend.app.services.selection import get_decision_data
 
 app = FastAPI(title="Wind Forecast Decision API")
@@ -24,11 +24,11 @@ def get_decision(delivery_date: str, cutoff: str = "09:00"):
         # Get the filtered dataframe and the pre-calculated metrics dictionary
         df, metadata = get_decision_data(d, cutoff)
         
-        # Convert NaN values to None so it safely converts to JSON
-        df_clean = df.where(pd.notnull(df), None)
+        # Safely convert Pandas DataFrame to a JSON-compliant dict (translates NaN to null)
+        records = json.loads(df.to_json(orient="records"))
         
         return {
-            "data": df_clean.to_dict(orient="records"),
+            "data": records,
             "metadata": metadata
         }
     except Exception as e:
