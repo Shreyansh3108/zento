@@ -24,8 +24,8 @@ def get_decision(delivery_date: str, cutoff: str = "09:00"):
         # Get the filtered dataframe and the pre-calculated metrics dictionary
         df, metadata = get_decision_data(d, cutoff)
         
-        # Safely convert Pandas DataFrame to a JSON-compliant dict (translates NaN to null)
-        records = json.loads(df.to_json(orient="records"))
+        # Add date_format="iso" so React can read the timestamps!
+        records = json.loads(df.to_json(orient="records", date_format="iso"))
         
         return {
             "data": records,
