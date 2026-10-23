@@ -193,18 +193,18 @@ export default function App() {
                       width={65}
                     />
                     <Tooltip 
-                      labelFormatter={(label) => `TIME: ${formatTime(label as string)}`}
-                      formatter={(value: number, name: string) => [`${value.toLocaleString()} MW`, name]}
-                      contentStyle={{ 
-                        backgroundColor: '#09090b', 
-                        borderColor: '#27272a', 
-                        color: '#f4f4f5',
-                        fontFamily: 'monospace',
-                        fontSize: '12px',
-                        borderRadius: '4px'
-                      }}
-                      itemStyle={{ paddingTop: '4px' }}
-                    />
+  labelFormatter={(label) => `TIME: ${formatTime(label as string)}`}
+  formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} MW`, name]}
+  contentStyle={{ 
+    backgroundColor: '#09090b', 
+    borderColor: '#27272a', 
+    color: '#f4f4f5',
+    fontFamily: 'monospace',
+    fontSize: '12px',
+    borderRadius: '4px'
+  }}
+  itemStyle={{ paddingTop: '4px' }}
+/>
                     <Legend 
                       iconType="circle" 
                       wrapperStyle={{ fontSize: '12px', color: '#a1a1aa' }}
