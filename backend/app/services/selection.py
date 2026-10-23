@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from datetime import datetime, date, time, timedelta
 from backend.app.config import ACTUALS_PATH, FORECASTS_PATH, DEFAULT_CUTOFF, TZ_LONDON, TZ_UTC
 
@@ -36,9 +37,27 @@ def get_decision_data(delivery_date: date, cutoff_str: str = DEFAULT_CUTOFF):
 
     # 6. Merge actuals and forecasts
     joined = pd.merge(latest, a, on="start_time_utc", how="outer")
-    
-    # Calculate error (positive = over-forecast)
     joined["error"] = joined["forecast_mw"] - joined["actual_mw"]
     joined.sort_values("start_time_utc", inplace=True)
     
-    return joined, cutoff_utc
+    # 7. Calculate Accuracy Metrics & Correct MWh Logic
+    mae = joined["error"].abs().mean()
+    rmse = np.sqrt((joined["error"] ** 2).mean())
+    bias = joined["error"].mean()
+    p90 = joined["error"].abs().quantile(0.90)
+    
+    # Wind is measured in MW. Sum of MW * 0.5 hours = Total MWh
+    total_mwh = joined["forecast_mw"].sum() * 0.5
+
+    metadata = {
+        "delivery_date": delivery_date.isoformat(),
+        "cutoff_applied_utc": cutoff_utc.isoformat(),
+        "total_forecast_mwh": float(total_mwh) if pd.notna(total_mwh) else 0,
+        "mae_mw": float(mae) if pd.notna(mae) else 0,
+        "rmse_mw": float(rmse) if pd.notna(rmse) else 0,
+        "bias_mw": float(bias) if pd.notna(bias) else 0,
+        "p90_mw": float(p90) if pd.notna(p90) else 0,
+        "missing_actuals": int(joined["actual_mw"].isna().sum())
+    }
+    
+    return joined, metadata

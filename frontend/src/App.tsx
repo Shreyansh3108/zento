@@ -16,6 +16,9 @@ interface Metadata {
   cutoff_applied_utc: string;
   total_forecast_mwh: number;
   mae_mw: number;
+  rmse_mw: number;
+  bias_mw: number;
+  p90_mw: number;
   missing_actuals: number;
 }
 
@@ -64,7 +67,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <div className="w-1.5 h-8 bg-cyan-500 rounded-sm"></div>
             <div>
-              <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">Wind Asset Arbitration</h1>
+              <h1 className="text-xl font-semibold text-zinc-100 tracking-tight">Wind Forecast Decision Portal</h1>
               <p className="text-xs text-zinc-500 font-mono mt-0.5">UK DAY-AHEAD MARKET :: GATE CLOSURE ANALYSIS</p>
             </div>
           </div>
@@ -101,50 +104,73 @@ export default function App() {
           </div>
         )}
 
-        {/* KPI Cards - Dense & Financial */}
+        {/* KPI Cards & Accuracy Metrics */}
         {!error && metadata && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Total Forecast</span>
-                <Zap size={16} className="text-zinc-600" />
+          <div className="space-y-4">
+            {/* Primary Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Total Forecast</span>
+                  <Zap size={16} className="text-zinc-600" />
+                </div>
+                <div>
+                  <span className="text-3xl font-mono font-medium text-zinc-100">{metadata.total_forecast_mwh.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                  <span className="text-xs text-zinc-500 ml-2">MWh</span>
+                </div>
               </div>
-              <div>
-                <span className="text-3xl font-mono font-medium text-zinc-100">{metadata.total_forecast_mwh.toLocaleString()}</span>
-                <span className="text-xs text-zinc-500 ml-2">MWh</span>
+              
+              <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Daily Risk Exposure (MAE)</span>
+                  <Activity size={16} className="text-amber-500" />
+                </div>
+                <div>
+                  <span className="text-3xl font-mono font-medium text-amber-500">{metadata.mae_mw.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                  <span className="text-xs text-amber-700 ml-2">MW</span>
+                </div>
               </div>
-            </div>
-            
-            <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Risk Exposure (MAE)</span>
-                <Activity size={16} className="text-amber-500" />
+
+              <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Latest Valid Publish Time</span>
+                  <Clock size={16} className="text-zinc-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-lg font-mono font-medium text-zinc-300">
+                    {metadata.cutoff_applied_utc ? metadata.cutoff_applied_utc.substring(0, 10) : 'N/A'}
+                  </span>
+                  <span className="text-sm font-mono text-zinc-500">
+                    {metadata.cutoff_applied_utc ? metadata.cutoff_applied_utc.substring(11, 16) : ''} UTC
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-3xl font-mono font-medium text-amber-500">{metadata.mae_mw.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
-                <span className="text-xs text-amber-700 ml-2">MW</span>
+
+              <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Data Integrity</span>
+                  <AlertCircle size={16} className={metadata.missing_actuals > 0 ? "text-red-500" : "text-zinc-600"} />
+                </div>
+                <div>
+                  <span className={`text-3xl font-mono font-medium ${metadata.missing_actuals > 0 ? "text-red-500" : "text-zinc-400"}`}>{metadata.missing_actuals}</span>
+                  <span className="text-xs text-zinc-600 ml-2">missing slots</span>
+                </div>
               </div>
             </div>
 
-            <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Forecast Vintage</span>
-                <Clock size={16} className="text-zinc-600" />
+            {/* Secondary Accuracy Metrics (To satisfy the requirements checklist) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-[#18181b] p-3 border border-zinc-800 flex justify-between items-center">
+                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Accuracy (RMSE)</span>
+                <span className="text-sm font-mono text-zinc-300">{metadata.rmse_mw.toLocaleString(undefined, {maximumFractionDigits: 0})} MW</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-mono font-medium text-zinc-300">{format(parseISO(metadata.cutoff_applied_utc), 'dd MMM yyyy')}</span>
-                <span className="text-sm font-mono text-zinc-500">{format(parseISO(metadata.cutoff_applied_utc), 'HH:mm')} UTC</span>
+              <div className="bg-[#18181b] p-3 border border-zinc-800 flex justify-between items-center">
+                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">System Bias</span>
+                <span className="text-sm font-mono text-zinc-300">{metadata.bias_mw.toLocaleString(undefined, {maximumFractionDigits: 0})} MW</span>
               </div>
-            </div>
-
-            <div className="bg-[#18181b] p-4 border border-zinc-800 flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">Data Integrity</span>
-                <AlertCircle size={16} className={metadata.missing_actuals > 0 ? "text-red-500" : "text-zinc-600"} />
-              </div>
-              <div>
-                <span className={`text-3xl font-mono font-medium ${metadata.missing_actuals > 0 ? "text-red-500" : "text-zinc-400"}`}>{metadata.missing_actuals}</span>
-                <span className="text-xs text-zinc-600 ml-2">missing slots</span>
+              <div className="bg-[#18181b] p-3 border border-zinc-800 flex justify-between items-center">
+                <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest">P90 Error Band</span>
+                <span className="text-sm font-mono text-zinc-300">{metadata.p90_mw.toLocaleString(undefined, {maximumFractionDigits: 0})} MW</span>
               </div>
             </div>
           </div>
@@ -193,18 +219,18 @@ export default function App() {
                       width={65}
                     />
                     <Tooltip 
-  labelFormatter={(label) => `TIME: ${formatTime(label as string)}`}
-  formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} MW`, name]}
-  contentStyle={{ 
-    backgroundColor: '#09090b', 
-    borderColor: '#27272a', 
-    color: '#f4f4f5',
-    fontFamily: 'monospace',
-    fontSize: '12px',
-    borderRadius: '4px'
-  }}
-  itemStyle={{ paddingTop: '4px' }}
-/>
+                      labelFormatter={(label) => `TIME: ${formatTime(label as string)}`}
+                      formatter={(value: any, name: any) => [`${Number(value).toLocaleString()} MW`, name]}
+                      contentStyle={{ 
+                        backgroundColor: '#09090b', 
+                        borderColor: '#27272a', 
+                        color: '#f4f4f5',
+                        fontFamily: 'monospace',
+                        fontSize: '12px',
+                        borderRadius: '4px'
+                      }}
+                      itemStyle={{ paddingTop: '4px' }}
+                    />
                     <Legend 
                       iconType="circle" 
                       wrapperStyle={{ fontSize: '12px', color: '#a1a1aa' }}
